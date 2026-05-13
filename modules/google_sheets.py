@@ -22,15 +22,19 @@ scope = [
 # =========================
 # AUTHENTICATION
 # =========================
+import streamlit as st
+
+creds_dict = dict(
+    st.secrets["gcp_service_account"]
+)
 
 creds = (
     ServiceAccountCredentials
-    .from_json_keyfile_name(
-        "service_account.json",
+    .from_json_keyfile_dict(
+        creds_dict,
         scope
     )
 )
-
 client = gspread.authorize(
     creds
 )
