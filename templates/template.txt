@@ -1,0 +1,25 @@
+<html>
+<body>
+
+<p>Dear Hiring Team,</p>
+
+I hope you are doing well.
+
+<p>My name is Nishita Gupta, and I am a second-year undergraduate student at IIT Kharagpur pursuing B.Tech. I am reaching out to express my interest in Analyst Internship opportunities at your company.<p>
+
+<p>I have a strong interest in data-driven problem solving, machine learning, business analytics, and product strategy. Alongside my academic coursework, I have built hands-on experience with Python, SQL, Pandas, NumPy, Excel, and Power BI for data analysis and visualisation. I have also completed a few online courses to strengthen my fundamentals in ML concepts and practical workflows, along with coursework in Essentials of Machine Learning in my 2nd year, where I developed an understanding of supervised learning, model evaluation, data preprocessing, and analytical problem solving.<p>
+
+<p>Beyond technical learning, I have actively worked on product strategy and business analysis projects through competitions and case studies. These experiences involved analysing user behaviour, identifying growth and conversion gaps, designing GTM strategies, and building data-backed business recommendations. Through IFSA IIT Kharagpur, I have additionally worked on valuation, investment analysis, and risk management projects.<p>
+I enjoy working at the intersection of analytics, product, and strategy, and I am particularly interested in roles involving business analytics, product analytics, and data-driven decision making.
+
+<p>I'm deeply impressed by {company} mission and innovative approach. I believe my technical skills, eagerness to learn, and ability to adapt would make me a valuable addition to your team. I have attached my resume, which details my qualifications and relevant project experience.<p>
+
+<p>Could you please let me know if there are any internship openings or if there's a possibility for me to join your team? Thank you for considering my application.<p>
+
+<p>
+Sincerely,<br>
+Nishita Gupta<br>
+IIT Kharagpur<br>
++91 7742593676
+</p>
+

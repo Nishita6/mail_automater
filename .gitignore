@@ -1,0 +1,29 @@
+
+__pycache__/
+*.pyc
+
+# Virtual Environment
+.venv/
+venv/
+
+# Secrets
+credentials.json
+token.json
+service_account.json
+.env
+
+# Generated Files
+scheduled_jobs.json
+sheet_url.txt
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
