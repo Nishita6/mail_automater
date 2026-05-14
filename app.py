@@ -37,6 +37,8 @@ SUBJECT = (
 # LOAD TEMPLATE
 # =========================
 
+import os
+
 def run_email_campaign_automated(creds, url):
     """
     A thread-safe version of the campaign runner.
@@ -45,36 +47,50 @@ def run_email_campaign_automated(creds, url):
     from modules.google_sheets import get_google_sheet_data, update_sheet_status, update_sent_time
     from modules.resume_selector import select_resume
 
-    # Load template
-    with open("templates/template.txt", "r", encoding="utf-8") as file:
-        template = file.read()
+    # 1. Use an Absolute Path for the template
+    base_path = os.path.dirname(__file__)
+    template_path = os.path.join(base_path, "templates", "template.txt")
 
-    # Get data using the URL passed from the job
+    try:
+        with open(template_path, "r", encoding="utf-8") as file:
+            template_content = file.read()
+    except Exception as e:
+        print(f"❌ Error loading template: {e}")
+        return # Stop if template can't be read
+
+    # 2. Get data
     df = get_google_sheet_data(url)
     pending_leads = df[df["status"] == "pending"]
 
     for index, row in pending_leads.iterrows():
-        body = template.format(
-            name=row["name"],
-            company=row["company"],
-            domain=row["domain"]
-        )
+        # 3. Carefully format the body
+        try:
+            email_body = template_content.format(
+                name=row.get("name", "Candidate"),
+                company=row.get("company", "the company"),
+                domain=row.get("domain", "your team")
+            )
+        except KeyError as e:
+            print(f"❌ Formatting error: Missing column {e} in Google Sheet")
+            continue
+
         resume_path = select_resume(row["domain"])
 
         try:
+            # 4. Verify send_email is receiving email_body
             send_email(
                 creds["EMAIL"],
                 creds["APP_PASSWORD"],
                 row["email"],
                 "Application for Internship | IIT Kharagpur",
-                body,
+                email_body, # Ensure this variable is NOT empty
                 resume_path
             )
             update_sheet_status(url, row["email"], "sent")
             update_sent_time(url, row["email"])
+            print(f"✅ Successfully sent to {row['email']}")
         except Exception as e:
-            print(f"Error sending to {row['email']}: {e}")
-
+            print(f"❌ Error sending to {row['email']}: {e}")
 
 def run_email_campaign():
     with open(
