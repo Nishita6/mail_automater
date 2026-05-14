@@ -50,6 +50,10 @@ if "scheduler_started" not in st.session_state:
     scheduler_thread.start()
 
     st.session_state.scheduler_started = True
+
+    print(
+        "Scheduler Thread Started"
+    )
 # =========================
 # SESSION STATE
 # =========================
