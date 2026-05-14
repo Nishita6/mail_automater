@@ -12,6 +12,8 @@ from modules.google_sheets import (
     update_followup_status
 )
 
+resume_path = "resumes/resume.pdf"
+
 # =========================
 # EMAIL CONFIG
 # =========================
@@ -112,16 +114,22 @@ def run_followups():
 
                 "%Y-%m-%d %H:%M:%S"
             )
+            minutes_passed = (
+                                     datetime.now() - sent_time
+                             ).total_seconds() / 60
 
-            days_passed = (
-                datetime.now() - sent_time
-            ).days
+            # Send follow-up after 5 minutes
+
+            if minutes_passed >= 5:
+            # days_passed = (
+            #     datetime.now() - sent_time
+            # ).days
 
             # =========================
             # SEND FOLLOWUP AFTER 2 DAYS
             # =========================
 
-            if days_passed >= 2:
+            # if days_passed >= 2:
 
                 body = template.format(
 
@@ -146,7 +154,7 @@ def run_followups():
 
                     body,
 
-                    None
+                    resume_path
                 )
 
                 # =========================

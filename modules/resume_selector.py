@@ -1,6 +1,6 @@
 def select_resume(domain):
 
-    domain = "resumes/resume.pdf"
+    return "resumes/resume.pdf"
 
     # if "ai" in domain or "ml" in domain:
     #     return "resumes/ml_resume.pdf"

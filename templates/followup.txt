@@ -1,15 +1,27 @@
-Hi {name},
+<p>Hi {name},</p>
 
+<p>
 I hope you are doing well.
+</p>
 
+<p>
 I wanted to follow up regarding my previous email about internship opportunities at {company}.
+</p>
 
+<p>
 I remain very interested in contributing and would be grateful for any opportunity to discuss further.
+</p>
 
+<p>
 Please find my resume attached again for convenience.
+</p>
 
+<p>
 Thank you for your time.
+</p>
 
-Regards,
-Nishita Gupta
+<p>
+Regards,<br>
+Nishita Gupta<br>
 IIT Kharagpur
+</p>
