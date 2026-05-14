@@ -354,3 +354,31 @@ if not df.empty:
         st.info(
             "No Scheduled Jobs"
         )
+        st.subheader(
+            "Email Tracking"
+        )
+
+        tracking_columns = [
+
+            "name",
+            "company",
+            "email",
+            "status",
+            "sent_time",
+            "followup_sent",
+            "reply_status"
+        ]
+
+        available_cols = [
+
+            col for col in tracking_columns
+
+            if col in df.columns
+        ]
+
+        st.dataframe(
+
+            df[available_cols],
+
+            width="stretch"
+        )
