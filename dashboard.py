@@ -124,19 +124,21 @@ def background_scheduler():
         # START SCHEDULER THREAD
         # =========================
 
-        if "scheduler_started" not in st.session_state:
-            scheduler_thread = threading.Thread(
 
-                target=background_scheduler,
+if "scheduler_started" not in st.session_state:
+    scheduler_thread = threading.Thread(
 
-                daemon=True
-            )
+        target=background_scheduler,
 
-            scheduler_thread.start()
+        daemon=True
+    )
 
-            st.session_state.scheduler_started = True
+    scheduler_thread.start()
 
-            print("Background Scheduler Started...")
+    st.session_state.scheduler_started = True
+
+    print("Background Scheduler Started...")
+
 if "sheet_url" not in st.session_state:
 
     st.session_state.sheet_url = ""
