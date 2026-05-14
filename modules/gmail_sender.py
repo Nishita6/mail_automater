@@ -1,82 +1,95 @@
-import base64
-import os
+import smtplib
 
 from email.mime.text import MIMEText
+
 from email.mime.multipart import MIMEMultipart
+
 from email.mime.base import MIMEBase
+
 from email import encoders
-
-from googleapiclient.errors import HttpError
-
-
-def create_message(sender, to, subject, body, attachment_path):
-
-    message = MIMEMultipart()
-
-    message['to'] = to
-    message['from'] = sender
-    message['subject'] = subject
-
-    # Email body
-    message.attach(MIMEText(body, 'html'))
-
-    # Attachment
-    filename = os.path.basename(attachment_path)
-
-    with open(attachment_path, 'rb') as attachment:
-
-        part = MIMEBase('application', 'octet-stream')
-
-        part.set_payload(attachment.read())
-
-    encoders.encode_base64(part)
-
-    part.add_header(
-        'Content-Disposition',
-        f'attachment; filename={filename}'
-    )
-
-    message.attach(part)
-
-    raw_message = base64.urlsafe_b64encode(
-        message.as_bytes()
-    ).decode()
-
-    return {
-        'raw': raw_message
-    }
 
 
 def send_email(
-    service,
-    sender,
-    to,
+
+    sender_email,
+
+    app_password,
+
+    receiver_email,
+
     subject,
+
     body,
-    attachment_path
+
+    attachment_path=None
 ):
 
-    try:
+    msg = MIMEMultipart()
 
-        message = create_message(
-            sender,
-            to,
-            subject,
-            body,
-            attachment_path
+    msg["From"] = sender_email
+
+    msg["To"] = receiver_email
+
+    msg["Subject"] = subject
+
+    msg.attach(
+        MIMEText(body, "plain")
+    )
+
+    # =========================
+    # ATTACH RESUME
+    # =========================
+
+    if attachment_path:
+
+        with open(
+            attachment_path,
+            "rb"
+        ) as attachment:
+
+            part = MIMEBase(
+                "application",
+                "octet-stream"
+            )
+
+            part.set_payload(
+                attachment.read()
+            )
+
+        encoders.encode_base64(part)
+
+        part.add_header(
+
+            "Content-Disposition",
+
+            f"attachment; filename={attachment_path}"
         )
 
-        sent_message = service.users().messages().send(
-            userId='me',
-            body=message
-        ).execute()
+        msg.attach(part)
 
-        print(f"Email sent to {to}")
+    # =========================
+    # SMTP SERVER
+    # =========================
 
-        return sent_message
+    server = smtplib.SMTP(
+        "smtp.gmail.com",
+        587
+    )
 
-    except HttpError as error:
+    server.starttls()
 
-        print(f"An error occurred: {error}")
+    server.login(
+        sender_email,
+        app_password
+    )
 
-        return None
+    server.sendmail(
+
+        sender_email,
+
+        receiver_email,
+
+        msg.as_string()
+    )
+
+    server.quit()

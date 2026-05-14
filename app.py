@@ -1,6 +1,5 @@
-from modules.gmail_auth import (
-    authenticate_gmail
-)
+
+
 
 from modules.gmail_sender import (
     send_email
@@ -19,20 +18,27 @@ from modules.google_sheets import (
     update_sent_time
 )
 
+import streamlit as st
 # =========================
 # AUTHENTICATE GMAIL
 # =========================
 
-service = authenticate_gmail()
+
 
 # =========================
 # SENDER EMAIL
 # =========================
 
+
+
 SENDER_EMAIL = (
     "gnishita16@gmail.com"
 )
 
+SENDER_EMAIL = st.secrets[SENDER_EMAIL]
+
+APP_PASSWORD = st.secrets["qfzj utia vzfz pdtj"
+]
 # =========================
 # SUBJECT
 # =========================
@@ -115,17 +121,11 @@ for index, row in pending_leads.iterrows():
     try:
 
         send_email(
-
             service,
-
             SENDER_EMAIL,
-
             email,
-
             SUBJECT,
-
             body,
-
             resume_path
         )
 
