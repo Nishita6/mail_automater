@@ -1,5 +1,4 @@
-
-
+import streamlit as st
 
 from modules.gmail_sender import (
     send_email
@@ -18,27 +17,14 @@ from modules.google_sheets import (
     update_sent_time
 )
 
-import streamlit as st
 # =========================
-# AUTHENTICATE GMAIL
-# =========================
-
-
-
-# =========================
-# SENDER EMAIL
+# EMAIL CONFIG
 # =========================
 
+SENDER_EMAIL = st.secrets["EMAIL"]
 
+APP_PASSWORD = st.secrets["APP_PASSWORD"]
 
-SENDER_EMAIL = (
-    "gnishita16@gmail.com"
-)
-
-SENDER_EMAIL = st.secrets[SENDER_EMAIL]
-
-APP_PASSWORD = st.secrets["qfzj utia vzfz pdtj"
-]
 # =========================
 # SUBJECT
 # =========================
@@ -75,7 +61,7 @@ with open(
     sheet_url = file.read()
 
 # =========================
-# LOAD SHEET DATA
+# LOAD GOOGLE SHEET
 # =========================
 
 df = get_google_sheet_data(
@@ -120,16 +106,26 @@ for index, row in pending_leads.iterrows():
 
     try:
 
+        print(f"Sending to {email}")
+
         send_email(
-            service,
+
             SENDER_EMAIL,
+
+            APP_PASSWORD,
+
             email,
+
             SUBJECT,
+
             body,
+
             resume_path
         )
 
-        # Update Status
+        print(f"SUCCESS: {email}")
+
+        # Update Sheet Status
         update_sheet_status(
 
             sheet_url,
@@ -147,14 +143,10 @@ for index, row in pending_leads.iterrows():
             email
         )
 
-        print(
-            f"Email sent to {email}"
-        )
-
     except Exception as e:
 
         print(
-            f"Failed for {email}"
+            f"FAILED: {email}"
         )
 
         print(e)
