@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import threading
-import background_scheduler
+import scheduler1
 from datetime import datetime, time
 
 from app import run_email_campaign
@@ -42,7 +42,7 @@ if "scheduler_started" not in st.session_state:
 
     scheduler_thread = threading.Thread(
 
-        target=background_scheduler.start_scheduler,
+        target=scheduler1.start_scheduler,
 
         daemon=True
     )
