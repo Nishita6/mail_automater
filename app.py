@@ -36,6 +36,46 @@ SUBJECT = (
 # =========================
 # LOAD TEMPLATE
 # =========================
+
+def run_email_campaign_automated(creds, url):
+    """
+    A thread-safe version of the campaign runner.
+    """
+    from modules.gmail_sender import send_email
+    from modules.google_sheets import get_google_sheet_data, update_sheet_status, update_sent_time
+    from modules.resume_selector import select_resume
+
+    # Load template
+    with open("templates/template.txt", "r", encoding="utf-8") as file:
+        template = file.read()
+
+    # Get data using the URL passed from the job
+    df = get_google_sheet_data(url)
+    pending_leads = df[df["status"] == "pending"]
+
+    for index, row in pending_leads.iterrows():
+        body = template.format(
+            name=row["name"],
+            company=row["company"],
+            domain=row["domain"]
+        )
+        resume_path = select_resume(row["domain"])
+
+        try:
+            send_email(
+                creds["EMAIL"],
+                creds["APP_PASSWORD"],
+                row["email"],
+                "Application for Internship | IIT Kharagpur",
+                body,
+                resume_path
+            )
+            update_sheet_status(url, row["email"], "sent")
+            update_sent_time(url, row["email"])
+        except Exception as e:
+            print(f"Error sending to {row['email']}: {e}")
+
+
 def run_email_campaign():
     with open(
 

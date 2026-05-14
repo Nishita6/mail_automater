@@ -1,143 +1,74 @@
 import streamlit as st
-import pandas as pd
-import json
 import threading
+import json
 import time as t
-from datetime import datetime, time
+from datetime import datetime, timedelta
+import pytz  # Standard for timezone handling
 
-from app import run_email_campaign
+# Import your functions
+from app import run_email_campaign_automated
 
-from followup_scheduler import (
-    run_followups
-)
 
-from modules.google_sheets import (
-    get_google_sheet_data
-)
-
-# =========================
-# PAGE CONFIG
-# =========================
-
-st.set_page_config(
-
-    page_title="Cold Email Dashboard",
-
-    layout="wide"
-)
-
-# =========================
-# TITLE
-# =========================
-
-st.title(
-    "Cold Email Automation Dashboard"
-)
-
-# =========================
-# SESSION STATE
-# =========================
-
-# =========================
-# BACKGROUND SCHEDULER
-# =========================
-
-def background_scheduler():
+# --- THREAD-SAFE SCHEDULER ---
+def background_scheduler(email_creds):
+    """
+    email_creds: A dictionary containing EMAIL and APP_PASSWORD
+    since st.secrets isn't accessible inside threads.
+    """
+    IST = pytz.timezone('Asia/Kolkata')
 
     while True:
-
         try:
-
-            with open(
-                "scheduled_jobs.json",
-                "r"
-            ) as file:
-
+            with open("scheduled_jobs.json", "r") as file:
                 jobs = json.load(file)
-
-        except:
-
+        except (FileNotFoundError, json.JSONDecodeError):
             jobs = []
 
         updated = False
+        # Get current time in IST
+        now_ist = datetime.now(IST).replace(tzinfo=None)
 
         for job in jobs:
-
             if job["status"] == "pending":
+                schedule_time = datetime.strptime(job["schedule_time"], "%Y-%m-%d %H:%M:%S")
 
-                schedule_time = datetime.strptime(
-
-                    job["schedule_time"],
-
-                    "%Y-%m-%d %H:%M:%S"
-                )
-
-                # RUN WHEN TIME REACHED
-                if datetime.now() >= schedule_time:
-
+                if now_ist >= schedule_time:
                     try:
-
-                        # SAVE SHEET URL
-                        with open(
-                            "sheet_url.txt",
-                            "w"
-                        ) as file:
-
-                            file.write(
-                                job["sheet_url"]
-                            )
-
-                        # SEND EMAILS
-                        run_email_campaign()
-
-                        # UPDATE STATUS
-                        job["status"] = "completed"
-
-                        updated = True
-
-                        print(
-                            f"Scheduled campaign completed at {datetime.now()}"
+                        # Pass secrets directly to the function
+                        run_email_campaign_automated(
+                            creds=email_creds,
+                            url=job["sheet_url"]
                         )
-
+                        job["status"] = "completed"
+                        updated = True
+                        print(f"✅ Job Finished at {now_ist}")
                     except Exception as e:
+                        print(f"❌ Job Failed: {e}")
 
-                        print(e)
-
-        # SAVE UPDATED JOBS
         if updated:
+            with open("scheduled_jobs.json", "w") as file:
+                json.dump(jobs, file, indent=4)
 
-            with open(
-                "scheduled_jobs.json",
-                "w"
-            ) as file:
-
-                json.dump(
-                    jobs,
-                    file,
-                    indent=4
-                )
-
-        # CHECK EVERY 30 SECONDS
         t.sleep(30)
 
-        # =========================
-        # START SCHEDULER THREAD
-        # =========================
 
-
+# --- START THREAD ---
 if "scheduler_started" not in st.session_state:
-    scheduler_thread = threading.Thread(
+    # Capture secrets here to pass into the thread
+    creds = {
+        "EMAIL": st.secrets["EMAIL"],
+        "APP_PASSWORD": st.secrets["APP_PASSWORD"]
+    }
 
+    thread = threading.Thread(
         target=background_scheduler,
-
+        args=(creds,),
         daemon=True
     )
-
-    scheduler_thread.start()
-
+    thread.start()
     st.session_state.scheduler_started = True
+    print("🚀 Background Scheduler Started with IST Timezone")
 
-    print("Background Scheduler Started...")
 
 if "sheet_url" not in st.session_state:
 
