@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import threading
-import scheduler1
+import time as t
 from datetime import datetime, time
 
 from app import run_email_campaign
@@ -35,29 +35,108 @@ st.title(
 )
 
 # =========================
-# START BACKGROUND SCHEDULER
-# =========================
-
-if "scheduler_started" not in st.session_state:
-
-    scheduler_thread = threading.Thread(
-
-        target=scheduler1.start_scheduler,
-
-        daemon=True
-    )
-
-    scheduler_thread.start()
-
-    st.session_state.scheduler_started = True
-
-    print(
-        "Scheduler Thread Started"
-    )
-# =========================
 # SESSION STATE
 # =========================
 
+# =========================
+# BACKGROUND SCHEDULER
+# =========================
+
+def background_scheduler():
+
+    while True:
+
+        try:
+
+            with open(
+                "scheduled_jobs.json",
+                "r"
+            ) as file:
+
+                jobs = json.load(file)
+
+        except:
+
+            jobs = []
+
+        updated = False
+
+        for job in jobs:
+
+            if job["status"] == "pending":
+
+                schedule_time = datetime.strptime(
+
+                    job["schedule_time"],
+
+                    "%Y-%m-%d %H:%M:%S"
+                )
+
+                # RUN WHEN TIME REACHED
+                if datetime.now() >= schedule_time:
+
+                    try:
+
+                        # SAVE SHEET URL
+                        with open(
+                            "sheet_url.txt",
+                            "w"
+                        ) as file:
+
+                            file.write(
+                                job["sheet_url"]
+                            )
+
+                        # SEND EMAILS
+                        run_email_campaign()
+
+                        # UPDATE STATUS
+                        job["status"] = "completed"
+
+                        updated = True
+
+                        print(
+                            f"Scheduled campaign completed at {datetime.now()}"
+                        )
+
+                    except Exception as e:
+
+                        print(e)
+
+        # SAVE UPDATED JOBS
+        if updated:
+
+            with open(
+                "scheduled_jobs.json",
+                "w"
+            ) as file:
+
+                json.dump(
+                    jobs,
+                    file,
+                    indent=4
+                )
+
+        # CHECK EVERY 30 SECONDS
+        t.sleep(30)
+
+        # =========================
+        # START SCHEDULER THREAD
+        # =========================
+
+        if "scheduler_started" not in st.session_state:
+            scheduler_thread = threading.Thread(
+
+                target=background_scheduler,
+
+                daemon=True
+            )
+
+            scheduler_thread.start()
+
+            st.session_state.scheduler_started = True
+
+            print("Background Scheduler Started...")
 if "sheet_url" not in st.session_state:
 
     st.session_state.sheet_url = ""
