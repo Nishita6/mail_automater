@@ -1,16 +1,10 @@
 import streamlit as st
-
-import background_scheduler
-
 import pandas as pd
-
-import os
-
 import json
+from datetime import datetime, time
 
-from datetime import datetime
-from datetime import time
-
+from app import run_email_campaign
+from followup_scheduler import run_followups
 
 from modules.google_sheets import (
     get_google_sheet_data
@@ -66,7 +60,7 @@ if sheet_url:
         st.exception(e)
 
 # =========================
-# REQUIRED COLUMNS CHECK
+# REQUIRED COLUMNS
 # =========================
 
 if not df.empty:
@@ -107,7 +101,7 @@ if not df.empty:
 
     st.dataframe(
         df,
-        use_container_width=True
+        width="stretch"
     )
 
     # =========================
@@ -184,7 +178,7 @@ if not df.empty:
     col1, col2 = st.columns(2)
 
     # =========================
-    # SEND NOW
+    # SEND EMAILS
     # =========================
 
     with col1:
@@ -193,16 +187,20 @@ if not df.empty:
             "Send Pending Emails"
         ):
 
-            os.system(
-                "python app.py"
-            )
+            try:
 
-            st.success(
-                "Emails Sent Successfully"
-            )
+                run_email_campaign()
+
+                st.success(
+                    "Emails Sent Successfully"
+                )
+
+            except Exception as e:
+
+                st.exception(e)
 
     # =========================
-    # FOLLOW-UP
+    # FOLLOWUPS
     # =========================
 
     with col2:
@@ -211,13 +209,17 @@ if not df.empty:
             "Run Follow-Ups"
         ):
 
-            os.system(
-                "python followup_scheduler.py"
-            )
+            try:
 
-            st.success(
-                "Follow-Ups Sent"
-            )
+                run_followups()
+
+                st.success(
+                    "Follow-Ups Sent"
+                )
+
+            except Exception as e:
+
+                st.exception(e)
 
     # =========================
     # SCHEDULE EMAILS
@@ -242,8 +244,20 @@ if not df.empty:
 
         schedule_minute = st.selectbox(
             "Minute",
-            ["00", "05", "10", "15", "20", "25",
-             "30", "35", "40", "45", "50", "55"]
+            [
+                "00",
+                "05",
+                "10",
+                "15",
+                "20",
+                "25",
+                "30",
+                "35",
+                "40",
+                "45",
+                "50",
+                "55"
+            ]
         )
 
         schedule_time = time(
@@ -262,7 +276,6 @@ if not df.empty:
                 schedule_time
             )
 
-            # Load existing jobs
             try:
 
                 with open(
@@ -276,20 +289,17 @@ if not df.empty:
 
                 jobs = []
 
-            # Add new job
             jobs.append({
 
                 "sheet_url": sheet_url,
 
                 "schedule_time": scheduled_datetime.strftime(
-
                     "%Y-%m-%d %H:%M:%S"
                 ),
 
                 "status": "pending"
             })
 
-            # Save jobs
             with open(
                 "scheduled_jobs.json",
                 "w"
@@ -306,7 +316,7 @@ if not df.empty:
             )
 
     # =========================
-    # SHOW SCHEDULED JOBS
+    # SHOW JOBS
     # =========================
 
     st.subheader(
@@ -330,7 +340,7 @@ if not df.empty:
 
             st.dataframe(
                 jobs_df,
-                use_container_width=True
+                width="stretch"
             )
 
         else:

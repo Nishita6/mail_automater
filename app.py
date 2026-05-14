@@ -36,117 +36,117 @@ SUBJECT = (
 # =========================
 # LOAD TEMPLATE
 # =========================
+def run_email_campaign():
+    with open(
 
-with open(
+        "templates/template.txt",
 
-    "templates/template.txt",
+        "r",
 
-    "r",
+        encoding="utf-8"
 
-    encoding="utf-8"
+    ) as file:
 
-) as file:
+        template = file.read()
 
-    template = file.read()
+    # =========================
+    # LOAD SHEET URL
+    # =========================
 
-# =========================
-# LOAD SHEET URL
-# =========================
+    with open(
+        "sheet_url.txt",
+        "r"
+    ) as file:
 
-with open(
-    "sheet_url.txt",
-    "r"
-) as file:
+        sheet_url = file.read()
 
-    sheet_url = file.read()
+    # =========================
+    # LOAD GOOGLE SHEET
+    # =========================
 
-# =========================
-# LOAD GOOGLE SHEET
-# =========================
-
-df = get_google_sheet_data(
-    sheet_url
-)
-
-# =========================
-# FILTER PENDING LEADS
-# =========================
-
-pending_leads = df[
-    df["status"] == "pending"
-]
-
-# =========================
-# SEND EMAILS
-# =========================
-
-for index, row in pending_leads.iterrows():
-
-    name = row["name"]
-
-    company = row["company"]
-
-    email = row["email"]
-
-    domain = row["domain"]
-
-    body = template.format(
-
-        name=name,
-
-        company=company,
-
-        domain=domain
+    df = get_google_sheet_data(
+        sheet_url
     )
 
-    # Select Resume
-    resume_path = select_resume(
-        domain
-    )
+    # =========================
+    # FILTER PENDING LEADS
+    # =========================
 
-    try:
+    pending_leads = df[
+        df["status"] == "pending"
+    ]
 
-        print(f"Sending to {email}")
+    # =========================
+    # SEND EMAILS
+    # =========================
 
-        send_email(
+    for index, row in pending_leads.iterrows():
 
-            SENDER_EMAIL,
+        name = row["name"]
 
-            APP_PASSWORD,
+        company = row["company"]
 
-            email,
+        email = row["email"]
 
-            SUBJECT,
+        domain = row["domain"]
 
-            body,
+        body = template.format(
 
-            resume_path
+            name=name,
+
+            company=company,
+
+            domain=domain
         )
 
-        print(f"SUCCESS: {email}")
-
-        # Update Sheet Status
-        update_sheet_status(
-
-            sheet_url,
-
-            email,
-
-            "sent"
+        # Select Resume
+        resume_path = select_resume(
+            domain
         )
 
-        # Update Sent Time
-        update_sent_time(
+        try:
 
-            sheet_url,
+            print(f"Sending to {email}")
 
-            email
-        )
+            send_email(
 
-    except Exception as e:
+                SENDER_EMAIL,
 
-        print(
-            f"FAILED: {email}"
-        )
+                APP_PASSWORD,
 
-        print(e)
+                email,
+
+                SUBJECT,
+
+                body,
+
+                resume_path
+            )
+
+            print(f"SUCCESS: {email}")
+
+            # Update Sheet Status
+            update_sheet_status(
+
+                sheet_url,
+
+                email,
+
+                "sent"
+            )
+
+            # Update Sent Time
+            update_sent_time(
+
+                sheet_url,
+
+                email
+            )
+
+        except Exception as e:
+
+            print(
+                f"FAILED: {email}"
+            )
+
+            print(e)

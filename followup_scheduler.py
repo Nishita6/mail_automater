@@ -1,8 +1,5 @@
 from datetime import datetime
-
-from modules.gmail_auth import (
-    authenticate_gmail
-)
+import streamlit as st
 
 from modules.gmail_sender import (
     send_email
@@ -16,125 +13,169 @@ from modules.google_sheets import (
 )
 
 # =========================
-# LOAD SHEET URL
+# EMAIL CONFIG
 # =========================
 
-with open(
-    "sheet_url.txt",
-    "r"
-) as file:
+SENDER_EMAIL = st.secrets["EMAIL"]
 
-    sheet_url = file.read()
+APP_PASSWORD = st.secrets["APP_PASSWORD"]
 
 # =========================
-# LOAD GOOGLE SHEET
+# SUBJECT
 # =========================
-
-df = get_google_sheet_data(
-    sheet_url
-)
-
-# =========================
-# AUTHENTICATE GMAIL
-# =========================
-
-service = authenticate_gmail()
-
-# =========================
-# LOAD TEMPLATE
-# =========================
-
-with open(
-    "templates/followup.txt",
-    "r",
-    encoding="utf-8"
-) as file:
-
-    template = file.read()
-
-# =========================
-# SETTINGS
-# =========================
-
-SENDER_EMAIL = (
-    "gnishita16@gmail.com"
-)
 
 SUBJECT = (
     "Following up regarding internship opportunity"
 )
 
 # =========================
-# FOLLOWUP LOGIC
+# MAIN FUNCTION
 # =========================
 
-for index, row in df.iterrows():
+def run_followups():
 
-    try:
+    # =========================
+    # LOAD SHEET URL
+    # =========================
 
-        # Skip invalid rows
-        if (
+    with open(
+        "sheet_url.txt",
+        "r"
+    ) as file:
 
-            row["status"] != "sent"
+        sheet_url = file.read()
 
-            or
+    # =========================
+    # LOAD GOOGLE SHEET
+    # =========================
 
-            row["followup_sent"] == "yes"
+    df = get_google_sheet_data(
+        sheet_url
+    )
 
-            or
+    # =========================
+    # LOAD TEMPLATE
+    # =========================
 
-            row["reply_status"] == "replied"
-        ):
+    with open(
+        "templates/followup.txt",
+        "r",
+        encoding="utf-8"
+    ) as file:
 
-            continue
+        template = file.read()
 
-        sent_time = datetime.strptime(
+    # =========================
+    # FOLLOWUP LOGIC
+    # =========================
 
-            row["sent_time"],
+    for index, row in df.iterrows():
 
-            "%Y-%m-%d %H:%M:%S"
-        )
+        try:
 
-        days_passed = (
-            datetime.now() - sent_time
-        ).days
+            # =========================
+            # SKIP INVALID ROWS
+            # =========================
 
-        # Send after 3 days
-        if days_passed >= 2:
+            if (
 
-            body = template.format(
+                row["status"] != "sent"
 
-                name=row["name"],
+                or
 
-                company=row["company"]
+                str(
+                    row.get(
+                        "followup_sent",
+                        ""
+                    )
+                ).lower() == "yes"
+
+                or
+
+                str(
+                    row.get(
+                        "reply_status",
+                        ""
+                    )
+                ).lower() == "replied"
+            ):
+
+                continue
+
+            # =========================
+            # SENT TIME
+            # =========================
+
+            sent_time = datetime.strptime(
+
+                str(row["sent_time"]),
+
+                "%Y-%m-%d %H:%M:%S"
             )
 
-            send_email(
+            days_passed = (
+                datetime.now() - sent_time
+            ).days
 
-                service,
+            # =========================
+            # SEND FOLLOWUP AFTER 2 DAYS
+            # =========================
 
-                SENDER_EMAIL,
+            if days_passed >= 2:
 
-                row["email"],
+                body = template.format(
 
-                SUBJECT,
+                    name=row["name"],
 
-                body,
+                    company=row["company"]
+                )
 
-                None
-            )
+                print(
+                    f"Sending follow-up to {row['email']}"
+                )
 
-            update_followup_status(
+                send_email(
 
-                sheet_url,
+                    SENDER_EMAIL,
 
-                row["email"]
-            )
+                    APP_PASSWORD,
+
+                    row["email"],
+
+                    SUBJECT,
+
+                    body,
+
+                    None
+                )
+
+                # =========================
+                # UPDATE SHEET
+                # =========================
+
+                update_followup_status(
+
+                    sheet_url,
+
+                    row["email"]
+                )
+
+                print(
+                    f"Follow-up sent to {row['email']}"
+                )
+
+        except Exception as e:
 
             print(
-                f"Follow-up sent to {row['email']}"
+                f"Failed for {row['email']}"
             )
 
-    except Exception as e:
+            print(e)
 
-        print(e)
+# =========================
+# RUN SCRIPT
+# =========================
+
+if __name__ == "__main__":
+
+    run_followups()
