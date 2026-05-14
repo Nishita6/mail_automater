@@ -24,6 +24,10 @@ def send_email(
     attachment_path=None
 ):
 
+    # =========================
+    # CREATE EMAIL
+    # =========================
+
     msg = MIMEMultipart()
 
     msg["From"] = sender_email
@@ -33,22 +37,28 @@ def send_email(
     msg["Subject"] = subject
 
     msg.attach(
+
         MIMEText(body, "plain")
     )
 
     # =========================
-    # ATTACH RESUME
+    # ATTACH FILE
     # =========================
 
     if attachment_path:
 
         with open(
+
             attachment_path,
+
             "rb"
+
         ) as attachment:
 
             part = MIMEBase(
+
                 "application",
+
                 "octet-stream"
             )
 
@@ -56,40 +66,78 @@ def send_email(
                 attachment.read()
             )
 
-        encoders.encode_base64(part)
+        encoders.encode_base64(
+            part
+        )
+
+        filename = attachment_path.split(
+            "/"
+        )[-1]
 
         part.add_header(
 
             "Content-Disposition",
 
-            f"attachment; filename={attachment_path}"
+            f"attachment; filename={filename}"
         )
 
         msg.attach(part)
 
     # =========================
-    # SMTP SERVER
+    # SEND EMAIL
     # =========================
 
-    server = smtplib.SMTP(
-        "smtp.gmail.com",
-        587
-    )
+    try:
 
-    server.starttls()
+        print(
+            "Connecting to Gmail SMTP..."
+        )
 
-    server.login(
-        sender_email,
-        app_password
-    )
+        server = smtplib.SMTP(
 
-    server.sendmail(
+            "smtp.gmail.com",
 
-        sender_email,
+            587
+        )
 
-        receiver_email,
+        server.starttls()
 
-        msg.as_string()
-    )
+        print(
+            "Logging into Gmail..."
+        )
 
-    server.quit()
+        server.login(
+
+            sender_email,
+
+            app_password
+        )
+
+        print(
+            f"Sending email to {receiver_email}"
+        )
+
+        server.sendmail(
+
+            sender_email,
+
+            receiver_email,
+
+            msg.as_string()
+        )
+
+        print(
+            f"SUCCESS: {receiver_email}"
+        )
+
+        server.quit()
+
+    except Exception as e:
+
+        print(
+            "EMAIL ERROR:"
+        )
+
+        print(e)
+
+        raise e
